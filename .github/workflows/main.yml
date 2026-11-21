@@ -16,9 +16,27 @@ jobs:
           gradle-version: '8.5'
       - name: Create Manifest
         run: |
-          python3 -c 'import os; os.makedirs("app/src/main", exist_ok=True); L, R = chr(60), chr(62); open("app/src/main/AndroidManifest.xml", "w").write(f"{L}manifest xmlns:android=\"http://android.com\"{R}{L}application android:label=\"LiveBoot\" android:theme=\"@android:style/Theme.NoTitleBar.Fullscreen\"{R}{L}activity android:name=\".MainActivity\" android:exported=\"true\" android:windowSoftInputMode=\"adjustResize\"{R}{L}intent-filter{R}{L}action android:name=\"android.intent.action.MAIN\"/{R}{L}category android:name=\"android.intent.category.LAUNCHER\"/{R}{L}/intent-filter{R}{L}/activity{R}{L}/application{R}{L}/manifest{R}")'
+          python3 -c '
+          import os
+          os.makedirs("app/src/main", exist_ok=True)
+          L, R = chr(60), chr(62)
+          xml = (
+              f"{L}?xml version=\"1.0\" encoding=\"utf-8\"?{R}\n"
+              f"{L}manifest xmlns:android=\"http://android.com\"{R}\n"
+              f"    {L}application android:label=\"LiveBoot\" android:theme=\"@android:style/Theme.NoTitleBar.Fullscreen\"{R}\n"
+              f"        {L}activity android:name=\".MainActivity\" android:exported=\"true\" android:windowSoftInputMode=\"adjustResize\"{R}\n"
+              f"            {L}intent-filter{R}\n"
+              f"                {L}action android:name=\"android.intent.action.MAIN\" /{R}\n"
+              f"                {L}category android:name=\"android.intent.category.LAUNCHER\" /{R}\n"
+              f"            {L}/intent-filter{R}\n"
+              f"        {L}/activity{R}\n"
+              f"    {L}/application{R}\n"
+              f"{L}/manifest{R}\n"
+          )
+          open("app/src/main/AndroidManifest.xml", "w").write(xml)
+          '
       - name: Build Debug APK
-        run: gradle assembleDebug
+        run: gradle assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: LiveBoot-APK
