@@ -1,5 +1,7 @@
 name: Build APK
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -7,15 +9,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
       - uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.5'
-      - name: Generate Manifest
-        run: |
-          python3 -c 'import os; os.makedirs("app/src/main", exist_ok=True); open("app/src/main/AndroidManifest.xml", "w").write("\x3cmanifest xmlns:android=\"http://android.com\"\x3e\x3capplication android:label=\"LiveBoot\" android:theme=\"@android:style/Theme.NoTitleBar.Fullscreen\"\x3e\x3cactivity android:name=\".MainActivity\" android:exported=\"true\" android:windowSoftInputMode=\"adjustResize\"\x3e\x3cintent-filter\x3e\x3caction android:name=\"android.intent.action.MAIN\"/\x3e\x3ccategory android:name=\"android.intent.category.LAUNCHER\"/\x3e\x3c/intent-filter\x3e\x3c/activity\x3e\x3c/application\x3e\x3c/manifest\x3e")'
-      - run: gradle assembleDebug
+          gradle-version: 8.5
+      - name: Create Manifest
+        run: python3 -c 'import os; os.makedirs("app/src/main", exist_ok=True); open("app/src/main/AndroidManifest.xml", "w").write("\x3cmanifest xmlns:android=\"http://android.com\"\x3e\x3capplication android:label=\"LiveBoot\" android:theme=\"@android:style/Theme.NoTitleBar.Fullscreen\"\x3e\x3cactivity android:name=\".MainActivity\" android:exported=\"true\" android:windowSoftInputMode=\"adjustResize\"\x3e\x3cintent-filter\x3e\x3caction android:name=\"android.intent.action.MAIN\"/\x3e\x3ccategory android:name=\"android.intent.category.LAUNCHER\"/\x3e\x3c/intent-filter\x3e\x3c/activity\x3e\x3c/application\x3e\x3c/manifest\x3e")'
+      - name: Build Debug APK
+        run: gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: LiveBoot-APK
