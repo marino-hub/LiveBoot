@@ -16,27 +16,10 @@ jobs:
           gradle-version: '8.5'
       - name: Create Manifest
         run: |
-          python3 -c '
-          import os
-          os.makedirs("app/src/main", exist_ok=True)
-          L, R = chr(60), chr(62)
-          xml = (
-              f"{L}?xml version=\"1.0\" encoding=\"utf-8\"?{R}\n"
-              f"{L}manifest xmlns:android=\"http://android.com\"{R}\n"
-              f"    {L}application android:label=\"LiveBoot\" android:theme=\"@android:style/Theme.NoTitleBar.Fullscreen\"{R}\n"
-              f"        {L}activity android:name=\".MainActivity\" android:exported=\"true\" android:windowSoftInputMode=\"adjustResize\"{R}\n"
-              f"            {L}intent-filter{R}\n"
-              f"                {L}action android:name=\"android.intent.action.MAIN\" /{R}\n"
-              f"                {L}category android:name=\"android.intent.category.LAUNCHER\" /{R}\n"
-              f"            {L}/intent-filter{R}\n"
-              f"        {L}/activity{R}\n"
-              f"    {L}/application{R}\n"
-              f"{L}/manifest{R}\n"
-          )
-          open("app/src/main/AndroidManifest.xml", "w").write(xml)
-          '
+          mkdir -p app/src/main
+          echo "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPG1hbmlmZXN0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCI+CiAgICA8YXBwbGljYXRpb24gYW5kcm9pZDpsYWJlbD0iTGl2ZUJvb3QiIGFuZHJvaWQ6dGhlbWU9IkBhbmRyb2lkOnN0eWxlL1RoZW1lLk5vVGl0bGVCYXIuRnVsbHNjcmVlbiI+CiAgICAgICAgPGFjdGl2aXR5IGFuZHJvaWQ6bmFtZT0iLk1haW5BY3Rpdml0eSIgYW5kcm9pZDpleHBvcnRlZD0idHJ1ZSIgYW5kcm9pZDp3aW5kb3dTb2Z0SW5wdXRNb2RlPSJhZGp1c3RSZXNpemUiPgogICAgICAgICAgICA8aW50ZW50LWZpbHRlcj4KICAgICAgICAgICAgICAgIDxhY3Rpb24gYW5kcm9pZDpuYW1lPSJhbmRyb2lkLmludGVudC5hY3Rpb24uTUFJTiIgLz4KICAgICAgICAgICAgICAgIDxjYXRlZ29yeSBhbmRyb2lkOm5hbWU9ImFuZHJvaWQuaW50ZW50LmNhdGVnb3J5LkxBVU5DSEVSIiAvPgogICAgICAgICAgICA8L2ludGVudC1maWx0ZXI+CiAgICAgICAgPC9hY3Rpdml0eT4KICAgIDwvYXBwbGljYXRpb24+CjwvbWFuaWZlc3Q+" | base64 -d > app/src/main/AndroidManifest.xml
       - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace
+        run: gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: LiveBoot-APK
