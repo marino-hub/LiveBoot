@@ -19,6 +19,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import java.io.File;
+import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -33,6 +35,9 @@ public class MainActivity extends Activity {
     private Handler handler = new Handler(Looper.getMainLooper());
     private Random random = new Random();
     private int count = 0;
+
+    private File permDepFile;
+    private File rootDepFile;
 
     private final String[] FOLDERS = {
         "/storage/emulated/0", "/storage/emulated", "/storage",
@@ -59,6 +64,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        permDepFile = new File(getFilesDir(), "permisos.dep");
+        rootDepFile = new File(getFilesDir(), "root_status.dep");
+
         scrollView = new ScrollView(this);
         scrollView.setBackgroundColor(Color.BLACK);
 
@@ -117,7 +126,6 @@ public class MainActivity extends Activity {
         container.addView(promptLayout);
         scrollView.addView(container);
         setContentView(scrollView);
-
         cmdInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -127,6 +135,17 @@ public class MainActivity extends Activity {
                     appendColorLine("root@localhost:~# " + cmd, "#42A5F5");
                     if (cmd.equals("whoami")) appendColorLine("root", "#CCCCCC");
                     else if (cmd.equals("id")) appendColorLine("uid=0(root) gid=0(root) context=u:r:magisk:s0", "#CCCCCC");
+                    else if (cmd.equals("reset")) {
+                        permDepFile.delete();
+                        rootDepFile.delete();
+                        appendColorLine("[!] Dependencias eliminadas. Reiniciando estado...", "#FF5252");
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                recreate();
+                            }
+                        }, 800);
+                    }
                     else if (cmd.equals("exit")) finish();
                     else if (!cmd.isEmpty()) appendColorLine("[OK] Executed as uid=0: " + cmd, "#CCCCCC");
                     return true;
@@ -135,6 +154,34 @@ public class MainActivity extends Activity {
             }
         });
 
+        checkDependencies();
+    }
+
+    private void writeDepFile(File file, String content) {
+        try {
+            FileWriter writer = new FileWriter(file);
+            writer.write(content);
+            writer.close();
+        } catch (Exception ignored) {}
+    }
+
+    private void checkDependencies() {
+        if (permDepFile.exists() && rootDepFile.exists()) {
+            appendColorLine("[DEP] Archivo de dependencias cargado: permisos.dep [OK]", "#4DD0E1");
+            appendColorLine("[DEP] Archivo de dependencias cargado: root_status.dep [OK]", "#4DD0E1");
+            appendColorLine("[LiveBoot] Permisos y entorno ROOT ya activos en el sistema (uid=0).\n", "#42A5F5");
+            promptLayout.setVisibility(View.VISIBLE);
+            cmdInput.requestFocus();
+        } else if (permDepFile.exists()) {
+            appendColorLine("[DEP] Archivo de dependencias cargado: permisos.dep [OK]", "#4DD0E1");
+            appendColorLine("[+] Permisos de carpetas ya otorgados anteriormente.\n", "#42A5F5");
+            rootButton.setVisibility(View.VISIBLE);
+        } else {
+            showAdminDialog();
+        }
+    }
+
+    private void showAdminDialog() {
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("LiveBoot")
             .setMessage("Introducir comandos de administrador a esta aplicacion")
@@ -158,7 +205,9 @@ public class MainActivity extends Activity {
                 }
             }, 220);
         } else {
+            writeDepFile(permDepFile, "PERMISSIONS_GRANTED=true\nUID=0\n");
             appendColorLine("\n[+] Permisos otorgados (uid=0/root).", "#42A5F5");
+            appendColorLine("[DEP] Guardado en dependencia: " + permDepFile.getAbsolutePath(), "#CCCCCC");
             rootButton.setVisibility(View.VISIBLE);
             scrollDown();
         }
@@ -207,7 +256,9 @@ public class MainActivity extends Activity {
                     count++;
                     handler.postDelayed(this, 12);
                 } else {
-                    appendColorLine("\n[LiveBoot] sys.boot_completed=1 : Root environment ready (uid=0/root).\n", "#4DD0E1");
+                    writeDepFile(rootDepFile, "ROOT_INJECTED=true\nMAGISK_VER=28.1\n");
+                    appendColorLine("\n[DEP] Guardado en dependencia: " + rootDepFile.getAbsolutePath(), "#CCCCCC");
+                    appendColorLine("[LiveBoot] sys.boot_completed=1 : Root environment ready (uid=0/root).\n", "#4DD0E1");
                     promptLayout.setVisibility(View.VISIBLE);
                     cmdInput.requestFocus();
                 }
